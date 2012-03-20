@@ -14,10 +14,7 @@ import android.nfc.tech.NfcF;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.ImageView;
-import android.widget.TextView;
 
-import com.aioisystems.smarttagsample.Common;
-import com.aioisystems.smarttagsample.R;
 import com.aioisystems.smarttagsample.SmartTag;
 
 public class SmartTagAppActivity extends Activity {
@@ -32,17 +29,10 @@ public class SmartTagAppActivity extends Activity {
     //スマートタグ出力の向き
     private int ORIENTATION = 0;
     
-    //アップロードした画像URL
-    private String UPLOADED_IMG_URL = null;
-    
     private static final SmartTag mSmartTag = new SmartTag();
-    private static final SmartTag mSmartTag2 = new SmartTag();
     private static final int REQUEST_CROP_PICK = 1;
-    private static final int REQUEST_UPLOAD = 2;
     
     private ImageView imageView;
-    private TextView imgUrlView;
-    private Uri CONTENT_URI;
     private Intent cropIntent = new Intent("com.android.camera.action.CROP");
     
     @Override
@@ -51,11 +41,9 @@ public class SmartTagAppActivity extends Activity {
         setContentView(R.layout.main);
         
         imageView = (ImageView)findViewById(R.id.imageview);
-        imgUrlView = (TextView)findViewById(R.id.imgUrlView);
         
         //スマートタグ設定
         mSmartTag.setFunctionNo(SmartTag.FN_DRAW_CAMERA_IMAGE);
-        mSmartTag2.setFunctionNo(SmartTag.FN_WRITE_DATA);
         
         //NFC機能初期設定
         try {
@@ -77,7 +65,6 @@ public class SmartTagAppActivity extends Activity {
         
         if (getIntent().getAction().equals(Intent.ACTION_SEND)) {
             Uri uri = Uri.parse(getIntent().getExtras().get("android.intent.extra.STREAM").toString());
-            CONTENT_URI = uri;
             if (uri != null) {
                 cropIntent.setData(uri);
                 
@@ -133,30 +120,16 @@ public class SmartTagAppActivity extends Activity {
                     mSmartTag.setCameraImage(
                             MediaUtils.editBitmapForTag(tagBitmap, ORIENTATION));
                     
-                    //twiccaプラグインで画像アップロード
-                    try {
-                        Intent uploadIntent = MediaUtils.createUploadIntent(CONTENT_URI);
-                        startActivityForResult(uploadIntent, REQUEST_UPLOAD);
-                    } catch(Exception e){
-                        Log.v("ERROR",e.getMessage());
-                    }
                 }
-            } else if (requestCode == REQUEST_UPLOAD) {
-                UPLOADED_IMG_URL = data.getData().toString();
-                imgUrlView.setText(UPLOADED_IMG_URL);
-                mSmartTag2.setWriteText(UPLOADED_IMG_URL);
             }
         } else {
             Log.v("ERROR","result error:" + String.valueOf(requestCode));
-            //finish();
         }
     }
     
     @Override
     protected void onResume() {
         super.onResume();
-
-        Common.addLogi("start adapter");
         if(mAdapter != null){
             mAdapter.enableForegroundDispatch(
                     this, mPendingIntent, mFilters, mTechLists);
@@ -168,17 +141,10 @@ public class SmartTagAppActivity extends Activity {
         Tag tag = (Tag)intent.getParcelableExtra(NfcAdapter.EXTRA_TAG);
         byte[] idm = intent.getByteArrayExtra(NfcAdapter.EXTRA_ID);
         mSmartTag.selectTarget(idm, tag);
-        mSmartTag2.selectTarget(idm, tag);
         
         //非同期処理クラス初期化
-        mTagTask = new SmartTagTask(this, this, mSmartTag);
+        mTagTask = new SmartTagTask(this, mSmartTag);
         mTagTask.execute();
     }
     
-    public void writeUrlTag(){
-        if (UPLOADED_IMG_URL != null) {
-            SmartTagTask tagTask = new SmartTagTask(this, this, mSmartTag2);
-            tagTask.execute();
-        }
-    }
 }

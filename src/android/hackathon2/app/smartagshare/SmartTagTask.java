@@ -11,10 +11,8 @@ public class SmartTagTask extends AsyncTask<Void, Void, Void> {
     
     private static SmartTag mSmartTag;
     private static Context mContext;
-    private static SmartTagAppActivity mActivity;
     
-    public SmartTagTask(SmartTagAppActivity activity,Context context, SmartTag smartTag){
-        mActivity = activity;
+    public SmartTagTask(Context context, SmartTag smartTag){
         mContext = context;
         mSmartTag = smartTag;
     }
@@ -45,12 +43,8 @@ public class SmartTagTask extends AsyncTask<Void, Void, Void> {
             int function = mSmartTag.getFunctionNo();
             
             if (function == SmartTag.FN_DRAW_CAMERA_IMAGE) {
-                mActivity.writeUrlTag();
                 Toast.makeText(mContext, "画像を書き込んだお",
                         Toast.LENGTH_SHORT).show();
-            } else if (function == SmartTag.FN_WRITE_DATA) {
-                Toast.makeText(mContext, "URLを書き込んだお",
-                        Toast.LENGTH_LONG).show();
             }
 
         }
