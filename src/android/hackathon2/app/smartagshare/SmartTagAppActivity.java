@@ -26,9 +26,6 @@ public class SmartTagAppActivity extends Activity {
     
     private SmartTagTask mTagTask;
     
-    //スマートタグ出力の向き
-    private int ORIENTATION = 0;
-    
     private static final SmartTag mSmartTag = new SmartTag();
     private static final int REQUEST_CROP_PICK = 1;
     
@@ -84,20 +81,16 @@ public class SmartTagAppActivity extends Activity {
             public void onClick(DialogInterface dialog, int which) {
                 switch (which) {
                 case 0:
-                    cropIntent.putExtra("outputX", 96);
-                    cropIntent.putExtra("outputY", 200);
+                    cropIntent.putExtra("outputX", 192);
+                    cropIntent.putExtra("outputY", 400);
                     cropIntent.putExtra("aspectX", 100);
                     cropIntent.putExtra("aspectY", 208);
-                    ORIENTATION = 1;
-                    
                     break;
                 case 1:
-                    cropIntent.putExtra("outputX", 200);
-                    cropIntent.putExtra("outputY", 96);
+                    cropIntent.putExtra("outputX", 400);
+                    cropIntent.putExtra("outputY", 192);
                     cropIntent.putExtra("aspectX", 208);
                     cropIntent.putExtra("aspectY", 100);
-                    ORIENTATION = 0;
-                    
                     break;
                 }
                 cropIntent.putExtra("scale", true);
@@ -117,8 +110,9 @@ public class SmartTagAppActivity extends Activity {
                     
                     //タグ書き込み用を作成
                     Bitmap tagBitmap = data.getExtras().getParcelable("data");
+                    tagBitmap = MediaUtils.resizeBitamp(tagBitmap, 200, 96, true);
                     mSmartTag.setCameraImage(
-                            MediaUtils.editBitmapForTag(tagBitmap, ORIENTATION));
+                            MediaUtils.editBitmapForTag(tagBitmap));
                     
                 }
             }

@@ -5,7 +5,6 @@ import java.io.InputStream;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Canvas;
 import android.graphics.Matrix;
 import android.net.Uri;
 
@@ -17,17 +16,10 @@ public class MediaUtils {
      * スマートタグのためのBitmapを作成
      * 
      * @param bitmap
-     * @param orientation
-     * @return Bitmap
+     * @return newBitmap
      */
-    public static Bitmap editBitmapForTag(Bitmap bitmap, int orientation) {
+    public static Bitmap editBitmapForTag(Bitmap bitmap) {
         Bitmap newBitmap = bitmap;
-        if (orientation == 1) {
-            Matrix matrix = new Matrix();
-            matrix.postRotate(-90);
-            newBitmap = Bitmap.createBitmap(bitmap, 0, 0,
-                    bitmap.getWidth(), bitmap.getHeight(), matrix, true);
-        }
         DisplayPainter painter = new DisplayPainter();
         painter.putImage(newBitmap, 0, 0, true);
         newBitmap.recycle();
@@ -40,7 +32,7 @@ public class MediaUtils {
      * 
      * @param context
      * @param contentUri
-     * @return Bitmap
+     * @return bitmap
      */
     public static Bitmap loadBitmapFromuri(Context context, Uri contentUri) {
         InputStream is = null;
@@ -61,7 +53,7 @@ public class MediaUtils {
      * @param src
      * @param width
      * @param height
-     * @return
+     * @return result
      */
     public static Bitmap resizeBitamp(Bitmap src, int width, int height,
             boolean autoRotate) {
@@ -72,24 +64,26 @@ public class MediaUtils {
         // 画面サイズを取得する
         Matrix matrix = new Matrix();
 
-        float widthScale = width / srcWidth;
-        float heightScale = height / srcHeight;
-        if (widthScale > heightScale) {
+        float widthScale = (float)width / srcWidth;
+        float heightScale = (float)height / srcHeight;
+        if (widthScale > heightScale) { //縦の場合
+            heightScale = (float)height / srcWidth;
             matrix.postScale(heightScale, heightScale);
-        } else {
+        } else { //横の場合
             matrix.postScale(widthScale, widthScale);
         }
 
         // 回転
         if (autoRotate && (srcHeight > srcWidth && width > height)
                 || (srcWidth > srcHeight && height > width)) {
-            matrix.postRotate(90);
+            matrix.postRotate(-90);
         }
 
         // リサイズ
-        Bitmap result = Bitmap.createBitmap(width, height, null);
-        Canvas canvas = new Canvas(result);
-        canvas.drawBitmap(src, matrix, null);
+        Bitmap result = Bitmap.createBitmap(
+                src, 0, 0,
+                src.getWidth(), src.getHeight(),
+                matrix, true);
 
         return result;
     }
