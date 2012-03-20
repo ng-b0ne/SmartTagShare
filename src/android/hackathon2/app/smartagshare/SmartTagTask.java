@@ -43,7 +43,10 @@ public class SmartTagTask extends AsyncTask<Void, Void, Void> {
             int function = mSmartTag.getFunctionNo();
             
             if (function == SmartTag.FN_DRAW_CAMERA_IMAGE) {
-                Toast.makeText(mContext, "画像を書き込んだお",
+                Toast.makeText(mContext, "画像を書き込みました",
+                        Toast.LENGTH_SHORT).show();
+            } else if (function == SmartTag.FN_DRAW_TEXT) {
+                Toast.makeText(mContext, "テキストを書き込みました",
                         Toast.LENGTH_SHORT).show();
             }
 

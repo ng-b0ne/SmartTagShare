@@ -14,6 +14,7 @@ import android.nfc.tech.NfcF;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.ImageView;
+import android.widget.TextView;
 
 import com.aioisystems.smarttagsample.SmartTag;
 
@@ -30,7 +31,10 @@ public class SmartTagAppActivity extends Activity {
     private static final int REQUEST_CROP_PICK = 1;
     
     private ImageView imageView;
+    private TextView textView;
     private Intent cropIntent = new Intent("com.android.camera.action.CROP");
+    
+    private String intentType;
     
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -38,9 +42,7 @@ public class SmartTagAppActivity extends Activity {
         setContentView(R.layout.main);
         
         imageView = (ImageView)findViewById(R.id.imageview);
-        
-        //スマートタグ設定
-        mSmartTag.setFunctionNo(SmartTag.FN_DRAW_CAMERA_IMAGE);
+        textView = (TextView)findViewById(R.id.textview);
         
         //NFC機能初期設定
         try {
@@ -60,16 +62,26 @@ public class SmartTagAppActivity extends Activity {
             Log.v("ERROR",e.getMessage());
         }
         
-        if (getIntent().getAction().equals(Intent.ACTION_SEND)) {
-            Uri uri = Uri.parse(getIntent().getExtras().get("android.intent.extra.STREAM").toString());
-            if (uri != null) {
-                cropIntent.setData(uri);
-                
-                //縦か横か、画像を切り抜く
-                String[] dialogItem = new String[]{"Cutout Vertical","Cutout Horizontal"};
-                AlertDialog.Builder opDialog = new AlertDialog.Builder(this);
-                opDialog.setTitle("Option");
-                opDialog.setItems(dialogItem, dialogListener).create().show();
+        Intent intent = getIntent();
+        if (intent.getAction().equals(Intent.ACTION_SEND)) {
+            intentType = intent.getType();
+            if (intentType.equals("text/plain")) {
+                String shareTagText = intent.getExtras().getCharSequence(Intent.EXTRA_TEXT).toString();
+                textView.setText(shareTagText);
+                mSmartTag.setFunctionNo(SmartTag.FN_DRAW_TEXT);
+                mSmartTag.setDrawText(shareTagText);
+            } else if (intentType.equals("image/*")) {
+                mSmartTag.setFunctionNo(SmartTag.FN_DRAW_CAMERA_IMAGE);
+                Uri uri = Uri.parse(getIntent().getExtras().get("android.intent.extra.STREAM").toString());
+                if (uri != null) {
+                    cropIntent.setData(uri);
+                    
+                    //縦か横か、画像を切り抜く
+                    String[] dialogItem = new String[]{"Cutout Vertical","Cutout Horizontal"};
+                    AlertDialog.Builder opDialog = new AlertDialog.Builder(this);
+                    opDialog.setTitle("Option");
+                    opDialog.setItems(dialogItem, dialogListener).create().show();
+                }
             }
         }
     }
