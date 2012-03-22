@@ -1,4 +1,4 @@
-package android.hackathon2.app.smartagshare;
+package me.b0ne.android.hackathon2.app.smartagshare;
 
 import android.content.Context;
 import android.os.AsyncTask;
