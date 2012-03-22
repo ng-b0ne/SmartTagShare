@@ -1,5 +1,8 @@
 package android.hackathon2.app.smartagshare;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.PendingIntent;
@@ -68,8 +71,14 @@ public class SmartTagAppActivity extends Activity {
             if (intentType.equals("text/plain")) {
                 String shareTagText = intent.getExtras().getCharSequence(Intent.EXTRA_TEXT).toString();
                 textView.setText(shareTagText);
-                mSmartTag.setFunctionNo(SmartTag.FN_DRAW_TEXT);
-                mSmartTag.setDrawText(shareTagText);
+                
+                if (isURL(shareTagText)) { //URLの場合
+                    mSmartTag.setFunctionNo(SmartTag.FN_WRITE_DATA);
+                    mSmartTag.setWriteText(shareTagText);
+                } else { //普通のテキスト
+                    mSmartTag.setFunctionNo(SmartTag.FN_DRAW_TEXT);
+                    mSmartTag.setDrawText(shareTagText);
+                }
             } else if (intentType.equals("image/*")) {
                 mSmartTag.setFunctionNo(SmartTag.FN_DRAW_CAMERA_IMAGE);
                 Uri uri = Uri.parse(getIntent().getExtras().get("android.intent.extra.STREAM").toString());
@@ -84,6 +93,13 @@ public class SmartTagAppActivity extends Activity {
                 }
             }
         }
+    }
+    
+    private boolean isURL(String text) {
+        String matchUrl = "^(https?|ftp)(:\\/\\/[-_.!~*\\'()a-zA-Z0-9;\\/?:\\@&=+\\$,%#]+)$";
+        Pattern patt = Pattern.compile(matchUrl);
+        Matcher matcher = patt.matcher(text);
+        return matcher.matches();
     }
     
     private DialogInterface.OnClickListener dialogListener = 
