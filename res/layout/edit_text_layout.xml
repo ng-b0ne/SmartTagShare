@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:orientation="vertical"
+    android:paddingTop="10dip"
+    android:paddingLeft="5dip"
+    android:paddingRight="5dip"
+    android:background="#FCFCFC"
+    >
+    <TextView
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:textSize="20sp"
+        android:textColor="#333"
+        android:text="※ 改行は4までです。"
+        />
+    <View
+        android:layout_width="fill_parent"
+        android:layout_height="1dp"
+        android:background="#666"
+        />
+    <EditText
+        android:id="@+id/user_edit_text"
+        android:hint="表示したいテキストを入力してください"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:paddingTop="10dip"
+        android:paddingLeft="5dip"
+        android:paddingRight="5dip"
+        android:gravity="top|left"
+        android:maxLines="4"
+        android:lines="4"
+        android:textSize="24sp"
+        android:textColor="#333"
+        android:background="#FFFFFF"
+        />
+    <Button
+        android:id="@+id/text_input_ok"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:text="OK"
+        android:onClick="setText"
+        />
+</LinearLayout>

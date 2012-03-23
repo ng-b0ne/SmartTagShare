@@ -67,26 +67,22 @@ public class SmartTagAppActivity extends Activity {
         }
         
         Intent intent = getIntent();
-        if (intent.getAction() == null) {
-            Intent galleryIntent = new Intent(Intent.ACTION_PICK);
-            galleryIntent.setType("image/*");
-            startActivityForResult(galleryIntent, REQUEST_PICK_CONTACT);
-        } else {
+        if (intent.getAction() == null) { // MainActivityからのIntent
+            String type = intent.getStringExtra("TYPE");
+            if (type.equals("image")) {
+                Intent galleryIntent = new Intent(Intent.ACTION_PICK);
+                galleryIntent.setType("image/*");
+                startActivityForResult(galleryIntent, REQUEST_PICK_CONTACT);
+            } else if (type.equals("text")) {
+                setTextShare(intent.getStringExtra("TEXT"));
+            }
+        } else { // 共有からのIntent
             if (intent.getAction().equals(Intent.ACTION_SEND)) {
                 intentType = intent.getType();
                 if (intentType.equals("text/plain")) {
                     String shareTagText = intent.getExtras().getCharSequence(Intent.EXTRA_TEXT).toString();
-                    textView.setText(shareTagText);
-                    
-                    if (isURL(shareTagText)) { //URLの場合
-                        mSmartTag.setFunctionNo(SmartTag.FN_WRITE_DATA);
-                        mSmartTag.setWriteText(shareTagText);
-                    } else { //普通のテキスト
-                        mSmartTag.setFunctionNo(SmartTag.FN_DRAW_TEXT);
-                        mSmartTag.setDrawText(shareTagText);
-                    }
+                    setTextShare(shareTagText);
                 } else if (intentType.equals("image/*")) {
-                    mSmartTag.setFunctionNo(SmartTag.FN_DRAW_CAMERA_IMAGE);
                     Uri uri = Uri.parse(getIntent().getExtras().get("android.intent.extra.STREAM").toString());
                     if (uri != null) {
                         getTrimmingDialog(uri);
@@ -96,14 +92,46 @@ public class SmartTagAppActivity extends Activity {
         }
     }
 
+    private void setTextShare(final String text) {
+        textView.setText(text);
+        
+        if (isURL(text)) { //URLの場合
+            
+            //URLを書きこむか、表示するだけか
+            String[] dialogItem = new String[]{"URLを書きこむ","URLを表示する"};
+            AlertDialog.Builder opDialog = new AlertDialog.Builder(this);
+            opDialog.setTitle("Option");
+            opDialog.setItems(dialogItem, new DialogInterface.OnClickListener(){
+
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    switch (which) {
+                    case 0:
+                        mSmartTag.setFunctionNo(SmartTag.FN_WRITE_DATA);
+                        mSmartTag.setWriteText(text);
+                        break;
+                    case 1:
+                        mSmartTag.setFunctionNo(SmartTag.FN_DRAW_TEXT);
+                        mSmartTag.setDrawText(text);
+                        break;
+                    }
+                }
+            }).create().show();
+        } else { //普通のテキスト
+            mSmartTag.setFunctionNo(SmartTag.FN_DRAW_TEXT);
+            mSmartTag.setDrawText(text);
+        }
+    }
+
     private void getTrimmingDialog(Uri uri) {
+        mSmartTag.setFunctionNo(SmartTag.FN_DRAW_CAMERA_IMAGE);
         cropIntent.setData(uri);
         
         //縦か横か、画像を切り抜く
         String[] dialogItem = new String[]{"Cutout Vertical","Cutout Horizontal"};
         AlertDialog.Builder opDialog = new AlertDialog.Builder(this);
         opDialog.setTitle("Option");
-        opDialog.setItems(dialogItem, dialogListener).create().show();
+        opDialog.setItems(dialogItem, trimmingDialogListener).create().show();
     }
 
     private boolean isURL(String text) {
@@ -113,7 +141,7 @@ public class SmartTagAppActivity extends Activity {
         return matcher.matches();
     }
     
-    private DialogInterface.OnClickListener dialogListener = 
+    private DialogInterface.OnClickListener trimmingDialogListener = 
         new DialogInterface.OnClickListener(){
 
             @Override
@@ -137,7 +165,7 @@ public class SmartTagAppActivity extends Activity {
                 startActivityForResult(cropIntent, REQUEST_CROP_PICK);
             }
     };
-    
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (resultCode == RESULT_OK){
@@ -158,7 +186,6 @@ public class SmartTagAppActivity extends Activity {
                 if (data != null) {
                     Uri uri = data.getData();
                     if (uri != null) {
-                        mSmartTag.setFunctionNo(SmartTag.FN_DRAW_CAMERA_IMAGE);
                         getTrimmingDialog(uri);
                     }
                 }
