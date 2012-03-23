@@ -32,6 +32,7 @@ public class SmartTagAppActivity extends Activity {
     
     private static final SmartTag mSmartTag = new SmartTag();
     private static final int REQUEST_CROP_PICK = 1;
+    private static final int REQUEST_PICK_CONTACT = 2;
     
     private ImageView imageView;
     private TextView textView;
@@ -42,7 +43,7 @@ public class SmartTagAppActivity extends Activity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.main);
+        setContentView(R.layout.share_layout);
         
         imageView = (ImageView)findViewById(R.id.imageview);
         textView = (TextView)findViewById(R.id.textview);
@@ -66,35 +67,45 @@ public class SmartTagAppActivity extends Activity {
         }
         
         Intent intent = getIntent();
-        if (intent.getAction().equals(Intent.ACTION_SEND)) {
-            intentType = intent.getType();
-            if (intentType.equals("text/plain")) {
-                String shareTagText = intent.getExtras().getCharSequence(Intent.EXTRA_TEXT).toString();
-                textView.setText(shareTagText);
-                
-                if (isURL(shareTagText)) { //URLの場合
-                    mSmartTag.setFunctionNo(SmartTag.FN_WRITE_DATA);
-                    mSmartTag.setWriteText(shareTagText);
-                } else { //普通のテキスト
-                    mSmartTag.setFunctionNo(SmartTag.FN_DRAW_TEXT);
-                    mSmartTag.setDrawText(shareTagText);
-                }
-            } else if (intentType.equals("image/*")) {
-                mSmartTag.setFunctionNo(SmartTag.FN_DRAW_CAMERA_IMAGE);
-                Uri uri = Uri.parse(getIntent().getExtras().get("android.intent.extra.STREAM").toString());
-                if (uri != null) {
-                    cropIntent.setData(uri);
+        if (intent.getAction() == null) {
+            Intent galleryIntent = new Intent(Intent.ACTION_PICK);
+            galleryIntent.setType("image/*");
+            startActivityForResult(galleryIntent, REQUEST_PICK_CONTACT);
+        } else {
+            if (intent.getAction().equals(Intent.ACTION_SEND)) {
+                intentType = intent.getType();
+                if (intentType.equals("text/plain")) {
+                    String shareTagText = intent.getExtras().getCharSequence(Intent.EXTRA_TEXT).toString();
+                    textView.setText(shareTagText);
                     
-                    //縦か横か、画像を切り抜く
-                    String[] dialogItem = new String[]{"Cutout Vertical","Cutout Horizontal"};
-                    AlertDialog.Builder opDialog = new AlertDialog.Builder(this);
-                    opDialog.setTitle("Option");
-                    opDialog.setItems(dialogItem, dialogListener).create().show();
+                    if (isURL(shareTagText)) { //URLの場合
+                        mSmartTag.setFunctionNo(SmartTag.FN_WRITE_DATA);
+                        mSmartTag.setWriteText(shareTagText);
+                    } else { //普通のテキスト
+                        mSmartTag.setFunctionNo(SmartTag.FN_DRAW_TEXT);
+                        mSmartTag.setDrawText(shareTagText);
+                    }
+                } else if (intentType.equals("image/*")) {
+                    mSmartTag.setFunctionNo(SmartTag.FN_DRAW_CAMERA_IMAGE);
+                    Uri uri = Uri.parse(getIntent().getExtras().get("android.intent.extra.STREAM").toString());
+                    if (uri != null) {
+                        getTrimmingDialog(uri);
+                    }
                 }
             }
         }
     }
-    
+
+    private void getTrimmingDialog(Uri uri) {
+        cropIntent.setData(uri);
+        
+        //縦か横か、画像を切り抜く
+        String[] dialogItem = new String[]{"Cutout Vertical","Cutout Horizontal"};
+        AlertDialog.Builder opDialog = new AlertDialog.Builder(this);
+        opDialog.setTitle("Option");
+        opDialog.setItems(dialogItem, dialogListener).create().show();
+    }
+
     private boolean isURL(String text) {
         String matchUrl = "^(https?|ftp)(:\\/\\/[-_.!~*\\'()a-zA-Z0-9;\\/?:\\@&=+\\$,%#]+)$";
         Pattern patt = Pattern.compile(matchUrl);
@@ -142,6 +153,14 @@ public class SmartTagAppActivity extends Activity {
                     mSmartTag.setCameraImage(
                             MediaUtils.editBitmapForTag(tagBitmap));
                     
+                }
+            } else if (requestCode == REQUEST_PICK_CONTACT) {
+                if (data != null) {
+                    Uri uri = data.getData();
+                    if (uri != null) {
+                        mSmartTag.setFunctionNo(SmartTag.FN_DRAW_CAMERA_IMAGE);
+                        getTrimmingDialog(uri);
+                    }
                 }
             }
         } else {
